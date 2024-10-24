@@ -3,7 +3,6 @@ package de.papenhagen;
 import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
-import jakarta.activation.MimetypesFileTypeMap;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -25,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
 
 @ApplicationScoped
 @Produces(MediaType.TEXT_HTML)
@@ -50,19 +48,19 @@ public class FilesController {
     public TemplateInstance upload(final MultipartFormDataInput input) throws IOException {
 
         //Get API input data
-        Map<String, Collection<FormValue>> uploadForm = input.getValues();
+        final Map<String, Collection<FormValue>> uploadForm = input.getValues();
 
         //Get file data to save
-        for (FormValue inputPart : uploadForm.get("fileupload")) {
+        for (final FormValue inputPart : uploadForm.get("fileupload")) {
             final FileItem fileItem = inputPart.getFileItem();
-            LOG.info("filesize: " + fileItem.getFileSize() + " Bytes");
+            LOG.debug("filesize: " + fileItem.getFileSize() + " Bytes");
 
             final MultivaluedMap<String, String> headers = inputPart.getHeaders();
             final String fileName = getFileName(headers);
-            LOG.info("fileName: " + fileName);
+            LOG.debug("fileName: " + fileName);
 
             final String fileExtension = getFileExtension(fileName);
-            LOG.info("fileNameParts[1]: " + fileExtension);
+            LOG.debug("fileNameParts[1]: " + fileExtension);
 
             if (!WHITELIST.contains(fileExtension)) {
                 LOG.error("File not allowed");
@@ -95,7 +93,7 @@ public class FilesController {
     /**
      * This method gives back the fileName.
      *
-     * header sample
+     * header example
      * {
      * 	Content-Type=[image/png],
      * 	Content-Disposition=[form-data; name="file"; filename="filename.extension"]
