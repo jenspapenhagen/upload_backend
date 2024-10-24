@@ -19,6 +19,9 @@ import org.jboss.resteasy.reactive.server.multipart.FormValue;
 import org.jboss.resteasy.reactive.server.multipart.MultipartFormDataInput;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
@@ -67,9 +70,12 @@ public class FilesController {
             //move the given file into the uploadFile folder
             final java.nio.file.Path currentWorkingDir = Paths.get("").toAbsolutePath();
             final java.nio.file.Path path = Paths.get(currentWorkingDir.toString(), uploadPath, fileName);
+            try(final RandomAccessFile srcFile = new RandomAccessFile(path.toString(), "rw")) {
+                final FileChannel rwChannel = srcFile.getChannel();
+                final ByteBuffer writeBuffer = rwChannel.map(FileChannel.MapMode.READ_WRITE, 0, fileItem.getFileSize());
+                writeBuffer.put(fileItem.getInputStream().readAllBytes());
+                rwChannel.close();
 
-            try {
-                fileItem.write(path);
                 LOG.debug("success upload");
             } catch (IOException ex) {
                 LOG.error("IOException on creating the file: " + ex.getLocalizedMessage());
