@@ -3,6 +3,7 @@ package de.papenhagen;
 import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -46,24 +47,19 @@ public class FilesController {
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public TemplateInstance upload(final MultipartFormDataInput input) throws IOException {
-
-        //Get API input data
+        if (isNull(input)) {
+            LOG.error("no input");
+            return template.instance();
+        }
         final Map<String, Collection<FormValue>> uploadForm = input.getValues();
 
-        //Get file data to save
         for (final FormValue inputPart : uploadForm.get("fileupload")) {
             final FileItem fileItem = inputPart.getFileItem();
             LOG.debug("filesize: " + fileItem.getFileSize() + " Bytes");
 
-            final MultivaluedMap<String, String> headers = inputPart.getHeaders();
-            final String fileName = getFileName(headers);
-            LOG.debug("fileName: " + fileName);
-
-            final String fileExtension = getFileExtension(fileName);
-            LOG.debug("fileNameParts[1]: " + fileExtension);
-
-            if (!WHITELIST.contains(fileExtension)) {
-                LOG.error("File not allowed");
+            final String fileName = validate(inputPart);
+            if (isNull(fileName)) {
+                LOG.error("validation failed");
                 return template.instance();
             }
 
@@ -91,18 +87,54 @@ public class FilesController {
 
 
     /**
-     * This method gives back the fileName.
+     * This Validate Methode is checking against a whitelist.
      *
+     * @param inputPart of the MuliUpload
+     * @return the filename if everything is fine.
+     */
+    @Nullable
+    private String validate(final FormValue inputPart) {
+        final MultivaluedMap<String, String> headers = inputPart.getHeaders();
+
+        final String fileName = getFileName(headers);
+        LOG.debug("fileName: " + fileName);
+        if (isNull(fileName)) {
+            LOG.error("fileName is NULL");
+            return null;
+        }
+
+        final String fileExtension = getFileExtension(fileName);
+        LOG.debug("fileExtension: " + fileExtension);
+        if (isNull(fileExtension)) {
+            LOG.error("fileExtension is NULL");
+            return null;
+        }
+
+        if (!WHITELIST.contains(fileExtension)) {
+            LOG.error("File not allowed");
+            return null;
+        }
+
+        return fileName;
+    }
+
+    /**
+     * This method gives back the fileName.
+     * <p>
      * header example
      * {
-     * 	Content-Type=[image/png],
-     * 	Content-Disposition=[form-data; name="file"; filename="filename.extension"]
+     * Content-Type=[image/png],
+     * Content-Disposition=[form-data; name="file"; filename="filename.extension"]
      * }
+     *
      * @param header of the requested multiPart.
      * @return the fullFile name as string.
      */
+    @Nullable
     private String getFileName(final MultivaluedMap<String, String> header) {
-
+        if (isNull(header) || header.isEmpty()) {
+            return null;
+        }
         final String[] contentDisposition = header.getFirst("Content-Disposition").split(";");
 
         for (final String filename : contentDisposition) {
@@ -111,16 +143,18 @@ public class FilesController {
                 return name[1].trim().replaceAll("\"", "");
             }
         }
-        return "unknown";
+        return null;
     }
 
     /**
      * getting the file extension.
      * "jpg"
      * _NOT_ ".jpg"
+     *
      * @param filename to get the extension.
      * @return the file extension as string.
      */
+    @Nullable
     private String getFileExtension(final String filename) {
         if (isNull(filename)) {
             return null;
@@ -129,7 +163,7 @@ public class FilesController {
         if (dotIndex >= 0) {
             return filename.substring(dotIndex + 1);
         }
-        return "";
+        return null;
     }
 
 }
