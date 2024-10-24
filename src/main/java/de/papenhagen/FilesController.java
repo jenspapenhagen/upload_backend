@@ -17,8 +17,10 @@ import org.jboss.resteasy.reactive.server.multipart.FormValue;
 import org.jboss.resteasy.reactive.server.multipart.MultipartFormDataInput;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 @ApplicationScoped
@@ -27,6 +29,8 @@ import java.util.Map;
 public class FilesController {
 
     private static final Logger LOG = Logger.getLogger(FilesController.class);
+
+    private static final List<String> WHITELIST = List.of("pdf", "jpg", "jpeg");
 
     @ConfigProperty(name = "upload.path", defaultValue = "uploadfiles")
     String uploadPath;
@@ -55,6 +59,12 @@ public class FilesController {
         for (FormValue inputPart : uploadForm.get("fileupload")) {
             final FileItem fileItem = inputPart.getFileItem();
             LOG.info("filesize: " + fileItem.getFileSize() + " Bytes");
+
+            final String contentType = Files.probeContentType(fileItem.getFile());
+            if (!WHITELIST.contains(contentType)) {
+                LOG.error("File not allowed");
+                return template.instance();
+            }
 
             //WARNING: we are losing the file postfix.
             final String fileName = fileItem.getFile().toFile().getName();
