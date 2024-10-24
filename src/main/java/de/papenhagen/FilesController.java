@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @ApplicationScoped
@@ -99,28 +100,34 @@ public class FilesController {
      * 	Content-Type=[image/png],
      * 	Content-Disposition=[form-data; name="file"; filename="filename.extension"]
      * }
-     **/
-    private String getFileName(MultivaluedMap<String, String> header) {
+     * @param header of the requested multiPart.
+     * @return the fullFile name as string.
+     */
+    private String getFileName(final MultivaluedMap<String, String> header) {
 
-        String[] contentDisposition = header.getFirst("Content-Disposition").split(";");
+        final String[] contentDisposition = header.getFirst("Content-Disposition").split(";");
 
-        for (String filename : contentDisposition) {
+        for (final String filename : contentDisposition) {
             if ((filename.trim().startsWith("filename"))) {
-
-                String[] name = filename.split("=");
-
-                String finalFileName = name[1].trim().replaceAll("\"", "");
-                return finalFileName;
+                final String[] name = filename.split("=");
+                return name[1].trim().replaceAll("\"", "");
             }
         }
         return "unknown";
     }
 
-    private String getFileExtension(String filename) {
-        if (filename == null) {
+    /**
+     * getting the file extension.
+     * "jpg"
+     * _NOT_ ".jpg"
+     * @param filename to get the extension.
+     * @return the file extension as string.
+     */
+    private String getFileExtension(final String filename) {
+        if (isNull(filename)) {
             return null;
         }
-        int dotIndex = filename.lastIndexOf(".");
+        final int dotIndex = filename.lastIndexOf(".");
         if (dotIndex >= 0) {
             return filename.substring(dotIndex + 1);
         }
