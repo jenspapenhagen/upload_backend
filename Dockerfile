@@ -3,8 +3,8 @@ FROM maven:3.9.9-eclipse-temurin-21-jammy AS build
 COPY src /usr/src/app/src
 COPY pom.xml /usr/src/app
 USER root
-RUN chown -R quarkus /usr/src/app
-USER quarkus
+RUN chown -R builder /usr/src/app
+USER builder
 RUN mvn -f /usr/src/app/pom.xml clean package
 
 # release step
