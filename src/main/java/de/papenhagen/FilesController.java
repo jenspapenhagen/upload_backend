@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +38,8 @@ public class FilesController {
     private static final Logger LOG = Logger.getLogger(FilesController.class);
 
     private static final List<String> WHITELIST = List.of("pdf", "jpg", "jpeg");
+    //20MB
+    private static final int MAX_FILE_SIZE = 20_000_000;
 
     @ConfigProperty(name = "upload.path", defaultValue = "uploadfiles")
     String uploadPath;
@@ -70,7 +72,19 @@ public class FilesController {
             //move the given file into the uploadFile folder
             final java.nio.file.Path currentWorkingDir = Paths.get("").toAbsolutePath();
             final java.nio.file.Path path = Paths.get(currentWorkingDir.toString(), uploadPath, fileName);
-            try(final RandomAccessFile srcFile = new RandomAccessFile(path.toString(), "rw")) {
+            try {
+                final long fileSize = Files.size(path);
+                LOG.info("fileSize: " + fileSize);
+                if (fileSize > MAX_FILE_SIZE) {
+                    LOG.error("FileSize to big");
+                    return template.instance();
+                }
+            } catch (IOException ex) {
+                LOG.error("Exception on file size check: " + ex.getLocalizedMessage());
+                return template.instance();
+            }
+
+            try (final RandomAccessFile srcFile = new RandomAccessFile(path.toString(), "rw")) {
                 final FileChannel rwChannel = srcFile.getChannel();
                 final ByteBuffer writeBuffer = rwChannel.map(FileChannel.MapMode.READ_WRITE, 0, fileItem.getFileSize());
                 writeBuffer.put(fileItem.getInputStream().readAllBytes());
