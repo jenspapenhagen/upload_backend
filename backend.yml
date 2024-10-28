@@ -1,8 +1,8 @@
 services:
- backend:
-  container_name: backend
-  image: upload_backend:latest
-  volumes:
-  - ./uploadfiles:/app/uploadfiles
-  ports:
-  - 8080:8080/tcp
+    backend:
+        container_name: backend
+        image: upload_backend:latest
+        volumes:
+            - ./uploadfiles:/app/uploadfiles
+        ports:
+            - 8080:8080/tcp
