@@ -5,4 +5,10 @@ services:
         volumes:
             - ./uploadfiles:/app/uploadfiles
         ports:
-            - 8080:8080/tcp
+            #- 8080:8080/tcp
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.backend.rule=PathPrefix(`/backend`)
+            - traefik.http.routers.backend.entrypoints=web
+            - traefik.http.routers.backend.tls=false
+            - traefik.http.services.backend-service.loadbalancer.server.port=8080
