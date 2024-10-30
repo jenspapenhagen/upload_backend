@@ -4,8 +4,8 @@ services:
         image: upload_backend:latest
         volumes:
             - ./uploadfiles:/app/uploadfiles
-        ports:
-            #- 8080:8080/tcp
+        # ports:
+        #- 8080:8080/tcp
         labels:
             - traefik.enable=true
             - traefik.http.routers.backend.rule=PathPrefix(`/backend`)
