@@ -7,7 +7,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <quarkus.version>3.21.0</quarkus.version>
+        <quarkus.version>3.21.1</quarkus.version>
         <encoding>UTF-8</encoding>
 
         <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
